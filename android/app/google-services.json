@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "473610286696",
+    "project_id": "salesfollowup-7557c",
+    "storage_bucket": "salesfollowup-7557c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:473610286696:android:6cf0add9faf9948a52addd",
+        "android_client_info": {
+          "package_name": "com.example.salestool"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBgYGcxjzFek8t-dYniD42JoE3UjvyL6sQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
