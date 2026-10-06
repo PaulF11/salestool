@@ -6,7 +6,7 @@ const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-// Register a new agent
+// Register
 router.post("/register", async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -17,9 +17,36 @@ router.post("/register", async (req, res) => {
       });
     }
 
-    const existingUser = await User.findOne({ email });
+    const cleanName = name.trim();
+    const cleanEmail = email.trim().toLowerCase();
 
-    if (existingUser) {
+    if (!cleanName || !cleanEmail || !password) {
+      return res.status(400).json({
+        message: "Name, email, and password are required",
+      });
+    }
+
+    // Check if name is already taken.
+    // Case-insensitive: Tony, tony, and TONY are treated as the same name.
+    const existingName = await User.findOne({
+      name: {
+        $regex: `^${escapeRegex(cleanName)}$`,
+        $options: "i",
+      },
+    });
+
+    if (existingName) {
+      return res.status(400).json({
+        message: "Name is already taken. Please choose another name.",
+      });
+    }
+
+    // Check if email is already registered.
+    const existingEmail = await User.findOne({
+      email: cleanEmail,
+    });
+
+    if (existingEmail) {
       return res.status(400).json({
         message: "Email is already registered",
       });
@@ -28,8 +55,8 @@ router.post("/register", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
-      name,
-      email,
+      name: cleanName,
+      email: cleanEmail,
       password: hashedPassword,
       role: "agent",
     });
@@ -45,6 +72,25 @@ router.post("/register", async (req, res) => {
     });
   } catch (error) {
     console.error("Registration error:", error);
+
+    // Handle duplicate email/name database errors gracefully.
+    if (error.code === 11000) {
+      if (error.keyPattern && error.keyPattern.email) {
+        return res.status(400).json({
+          message: "Email is already registered",
+        });
+      }
+
+      if (error.keyPattern && error.keyPattern.name) {
+        return res.status(400).json({
+          message: "Name is already taken. Please choose another name.",
+        });
+      }
+
+      return res.status(400).json({
+        message: "An account with those details already exists.",
+      });
+    }
 
     res.status(500).json({
       message: "Registration failed",
@@ -64,7 +110,11 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ email });
+    const cleanEmail = email.trim().toLowerCase();
+
+    const user = await User.findOne({
+      email: cleanEmail,
+    });
 
     if (!user) {
       return res.status(401).json({
@@ -83,9 +133,6 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    // Login token with no expiration.
-    // The session remains active until logout
-    // or until the token is manually revoked.
     const token = jwt.sign(
       {
         userId: user._id,
@@ -114,7 +161,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// Register or update an FCM push notification token
+// Register FCM token
 router.post("/fcm-token", authMiddleware, async (req, res) => {
   try {
     const { token, platform } = req.body;
@@ -178,7 +225,7 @@ router.post("/fcm-token", authMiddleware, async (req, res) => {
   }
 });
 
-// Remove an FCM token
+// Remove FCM token
 router.delete("/fcm-token", authMiddleware, async (req, res) => {
   try {
     const { token } = req.body;
@@ -215,5 +262,10 @@ router.delete("/fcm-token", authMiddleware, async (req, res) => {
     });
   }
 });
+
+// Escape special characters before using a name inside a regex.
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
 module.exports = router;

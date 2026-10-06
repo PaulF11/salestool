@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../services/auth_service.dart';
 import 'dashboard_screen.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -26,6 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
   static const Color mutedWhite = Color(0xFF9BA7B5);
   static const Color electricBlue = Color(0xFF00A8FF);
   static const Color dangerRed = Color(0xFFFF304F);
+  static const Color successGreen = Color(0xFF20E080);
 
   @override
   void dispose() {
@@ -51,7 +53,6 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      // AuthService.login expects positional arguments.
       final result = await AuthService.login(email, password);
 
       if (!mounted) return;
@@ -112,6 +113,13 @@ class _LoginScreenState extends State<LoginScreen> {
         borderSide: BorderSide(color: dangerRed, width: 1.5),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 17),
+    );
+  }
+
+  void _openRegister() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const RegisterScreen()),
     );
   }
 
@@ -279,6 +287,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         const SizedBox(height: 22),
 
+                        // LOGIN BUTTON
                         SizedBox(
                           width: double.infinity,
                           height: 52,
@@ -314,6 +323,59 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                           ),
                         ),
+
+                        const SizedBox(height: 18),
+
+                        // DIVIDER
+                        Row(
+                          children: [
+                            const Expanded(
+                              child: Divider(color: Colors.white12),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                              ),
+                              child: Text(
+                                'OR',
+                                style: GoogleFonts.oxanium(
+                                  color: Colors.white38,
+                                  fontSize: 9,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                            ),
+                            const Expanded(
+                              child: Divider(color: Colors.white12),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 18),
+
+                        // CREATE ACCOUNT
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: OutlinedButton(
+                            onPressed: isLoading ? null : _openRegister,
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: white,
+                              side: BorderSide(color: Colors.white38, width: 1),
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.zero,
+                              ),
+                            ),
+                            child: Text(
+                              'CREATE ACCOUNT',
+                              style: GoogleFonts.oxanium(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1.3,
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -328,7 +390,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: 7,
                         height: 7,
                         decoration: const BoxDecoration(
-                          color: Color(0xFF20E080),
+                          color: successGreen,
                           shape: BoxShape.circle,
                         ),
                       ),

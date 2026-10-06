@@ -6,7 +6,10 @@ import '../models/client.dart';
 import 'auth_service.dart';
 
 class ClientService {
-  static const String baseUrl = 'http://localhost:5000/api';
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://localhost:5000/api',
+  );
 
   static Future<Map<String, String>> _headers() async {
     final token = await AuthService.getToken();
@@ -135,7 +138,6 @@ class ClientService {
         'followUpDate': followUpDate,
         'followUpTime': followUpTime,
         'followUpReason': followUpReason,
-        'estimatedDealValue': estimatedDealValue,
         'lastContactDate': lastContactDate,
         'lastContactResult': lastContactResult,
         'notes': notes,
@@ -272,6 +274,7 @@ class ClientService {
 
     try {
       final clientMap = _extractClientMap(decoded);
+
       return Client.fromJson(clientMap);
     } catch (_) {
       return null;

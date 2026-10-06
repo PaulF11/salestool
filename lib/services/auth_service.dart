@@ -6,7 +6,10 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  static const String baseUrl = 'http://localhost:5000/api';
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://localhost:5000/api',
+  );
 
   static Future<Map<String, dynamic>> login(
     String email,
@@ -39,8 +42,6 @@ class AuthService {
 
         await prefs.setString('userRole', data['user']['role']);
 
-        // Register this device's FCM token
-        // after the user has successfully logged in.
         try {
           await syncFcmToken();
         } catch (error) {
@@ -62,7 +63,7 @@ class AuthService {
 
       throw Exception(
         'Unable to connect to the server. '
-        'Make sure Node.js is running.',
+        'Make sure the backend is running.',
       );
     }
   }
@@ -104,7 +105,7 @@ class AuthService {
 
       throw Exception(
         'Unable to connect to the server. '
-        'Make sure Node.js is running.',
+        'Make sure the backend is running.',
       );
     }
   }
@@ -112,9 +113,13 @@ class AuthService {
   static Future<void> syncFcmToken() async {
     final jwtToken = await getToken();
 
-    // User is not logged in yet.
     if (jwtToken == null || jwtToken.isEmpty) {
       debugPrint('FCM TOKEN SYNC SKIPPED: User is not logged in.');
+      return;
+    }
+
+    if (kIsWeb) {
+      debugPrint('FCM TOKEN SYNC SKIPPED: Web notifications are disabled.');
       return;
     }
 
@@ -128,7 +133,7 @@ class AuthService {
         return;
       }
 
-      final platform = _getPlatformName();
+      final platform = getCurrentPlatformName();
 
       await registerFcmToken(fcmToken, platform);
     } catch (error) {
@@ -182,6 +187,10 @@ class AuthService {
       return;
     }
 
+    if (kIsWeb) {
+      return;
+    }
+
     try {
       final messaging = FirebaseMessaging.instance;
 
@@ -214,8 +223,6 @@ class AuthService {
   }
 
   static Future<void> logout() async {
-    // Remove this device from the user's notification
-    // targets before removing the login token.
     await removeCurrentFcmToken();
 
     final prefs = await SharedPreferences.getInstance();
@@ -248,23 +255,6 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
 
     return prefs.getString('userRole');
-  }
-
-  static String _getPlatformName() {
-    if (kIsWeb) {
-      return 'web';
-    }
-
-    switch (defaultTargetPlatform) {
-      case TargetPlatform.android:
-        return 'android';
-
-      case TargetPlatform.iOS:
-        return 'ios';
-
-      default:
-        return 'unknown';
-    }
   }
 
   static String getCurrentPlatformName() {
